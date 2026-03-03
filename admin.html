@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ระบบจัดการ - MSTSC Smart Vote</title>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script>tailwind.config = { theme: { extend: { fontFamily: { sans: ['Prompt', 'sans-serif'] } } } }</script>
+    <style> body { font-family: 'Prompt', sans-serif; } </style>
+</head>
+<body class="bg-gray-50 text-gray-800 selection:bg-purple-300 selection:text-purple-900">
+
+    <nav class="bg-gradient-to-r from-purple-800 to-purple-600 text-white p-4 shadow-lg flex justify-between items-center sticky top-0 z-50">
+        <div class="flex items-center gap-3">
+            <div class="bg-yellow-400 text-purple-900 font-black p-2 rounded-lg text-xs tracking-wider">MSTSC</div>
+            <h1 class="text-xl font-bold tracking-tight">Admin <span class="text-purple-200 font-normal">Smart Vote</span></h1>
+        </div>
+        <div class="flex items-center gap-4">
+            <span id="adminEmail" class="text-sm text-purple-200 hidden sm:block"></span>
+            <button id="logoutBtn" class="bg-white/20 hover:bg-white/30 backdrop-blur-sm px-4 py-2 rounded-full text-sm font-medium transition-all shadow-sm">ออกจากระบบ</button>
+        </div>
+    </nav>
+
+    <div class="max-w-6xl mx-auto p-6 mt-6 grid grid-cols-1 lg:grid-cols-3 gap-8">
+        
+        <div class="lg:col-span-1 bg-white p-6 rounded-2xl shadow-xl border border-purple-100 h-fit">
+            <div class="flex items-center gap-2 mb-6 text-purple-700">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"></path></svg>
+                <h2 class="text-xl font-bold text-purple-900">สร้างรายการโหวต</h2>
+            </div>
+            
+            <form id="createCampaignForm" class="space-y-5">
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-1">หัวข้อการโหวต</label>
+                    <input type="text" id="title" required class="w-full border-2 border-gray-200 rounded-xl p-3 focus:ring-0 focus:border-purple-500 transition-colors" placeholder="เช่น เลือกตั้งประธานนักเรียน">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-1">รายละเอียด</label>
+                    <textarea id="desc" rows="2" class="w-full border-2 border-gray-200 rounded-xl p-3 focus:ring-0 focus:border-purple-500 transition-colors" placeholder="คำอธิบายเพิ่มเติม..."></textarea>
+                </div>
+                
+                <div class="bg-yellow-50 p-3 rounded-xl border border-yellow-200">
+                    <label class="block text-sm font-bold text-yellow-800 mb-1">⏰ เวลาปิดโหวต (ปล่อยว่างได้)</label>
+                    <input type="datetime-local" id="endTime" class="w-full border-2 border-yellow-300 rounded-lg p-2 focus:ring-0 focus:border-yellow-500 text-sm">
+                </div>
+                
+                <div class="bg-purple-50 p-4 rounded-xl border border-purple-100">
+                    <label class="block text-sm font-bold text-purple-900 mb-3">รายชื่อผู้สมัคร / ตัวเลือก</label>
+                    <div id="optionsContainer" class="space-y-3">
+                        <div class="option-group bg-white p-3 rounded-lg border border-purple-200 shadow-sm relative">
+                            <input type="text" class="opt-name w-full border-b border-gray-200 pb-2 mb-2 focus:outline-none focus:border-purple-500 text-sm font-medium" placeholder="ชื่อตัวเลือกที่ 1 (บังคับ)" required>
+                            <input type="url" class="opt-img w-full text-xs text-gray-500 focus:outline-none" placeholder="ลิงก์รูปภาพ (ไม่บังคับ)">
+                        </div>
+                        <div class="option-group bg-white p-3 rounded-lg border border-purple-200 shadow-sm relative">
+                            <input type="text" class="opt-name w-full border-b border-gray-200 pb-2 mb-2 focus:outline-none focus:border-purple-500 text-sm font-medium" placeholder="ชื่อตัวเลือกที่ 2 (บังคับ)" required>
+                            <input type="url" class="opt-img w-full text-xs text-gray-500 focus:outline-none" placeholder="ลิงก์รูปภาพ (ไม่บังคับ)">
+                        </div>
+                    </div>
+                    <button type="button" id="addOptionBtn" class="mt-4 w-full flex items-center justify-center gap-1 border-2 border-dashed border-purple-300 text-purple-600 hover:bg-purple-100 hover:border-purple-400 font-bold py-2 rounded-lg transition-colors text-sm">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                        เพิ่มตัวเลือก
+                    </button>
+                </div>
+
+                <button type="submit" class="w-full flex items-center justify-center gap-2 bg-yellow-400 hover:bg-yellow-500 text-purple-900 font-black text-lg py-3 px-4 rounded-xl shadow-md transform hover:-translate-y-0.5 transition-all">
+                    บันทึกและเปิดโหวต
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                </button>
+            </form>
+        </div>
+
+        <div class="lg:col-span-2">
+            <h2 class="text-2xl font-black text-purple-900 mb-6 flex items-center gap-2">
+                <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
+                รายการโหวตทั้งหมด
+            </h2>
+            <div id="campaignList" class="space-y-6"></div>
+        </div>
+    </div>
+    <script type="module" src="admin.js"></script>
+</body>
+</html>
