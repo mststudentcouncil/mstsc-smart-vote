@@ -5,9 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>เข้าสู่ระบบ - MSTSC Smart Vote</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Anuphan:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script>
+tailwind.config = {
+  theme: {
+    extend: {
+      fontFamily: {
+        sans: ['Anuphan', 'sans-serif']
+      }
+    }
+  }
+}
+</script>
 </head>
-<body class="bg-gradient-to-br from-purple-900 via-purple-700 to-purple-800 min-h-screen flex items-center justify-center p-4">
-
+<body class="font-sans bg-gradient-to-br from-purple-900 via-purple-700 to-purple-800 min-h-screen flex items-center justify-center p-4">
+    
     <div class="bg-white p-8 rounded-3xl shadow-2xl max-w-sm w-full text-center relative overflow-hidden">
         <div class="absolute -top-10 -right-10 w-32 h-32 bg-yellow-400 rounded-full mix-blend-multiply filter blur-2xl opacity-50"></div>
         <div class="absolute -bottom-10 -left-10 w-32 h-32 bg-purple-400 rounded-full mix-blend-multiply filter blur-2xl opacity-50"></div>
