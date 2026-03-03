@@ -1,4 +1,4 @@
-// admin.js
+// admin.js (แก้ไขส่วนบนสุด)
 import { auth, db } from "./firebase-config.js";
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 import { collection, addDoc, getDocs, serverTimestamp, query, orderBy, updateDoc, doc, getDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
@@ -6,10 +6,23 @@ import { collection, addDoc, getDocs, serverTimestamp, query, orderBy, updateDoc
 onAuthStateChanged(auth, (user) => {
     if (!user) {
         window.location.href = "index.html";
+    } else if (user.email !== "studentcouncil@mst.ac.th") {
+        // ถ้าล็อกอินแล้ว แต่ไม่ใช่อีเมลแอดมิน ให้เด้งกลับไปหน้านักเรียน
+        Swal.fire({
+            icon: 'error',
+            title: 'ไม่อนุญาต',
+            text: 'หน้านี้สำหรับคณะกรรมการนักเรียนเท่านั้นครับ',
+            confirmButtonColor: '#9333ea',
+            confirmButtonText: 'กลับไปหน้าโหวต'
+        }).then(() => {
+            window.location.href = "student.html";
+        });
     } else {
         document.getElementById("adminEmail").innerText = `แอดมิน: ${user.email}`;
     }
 });
+
+// ... โค้ดส่วนอื่นๆ คงเดิม ...
 
 document.getElementById("logoutBtn").addEventListener("click", () => {
     signOut(auth).then(() => window.location.href = "index.html");

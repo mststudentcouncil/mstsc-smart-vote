@@ -66,9 +66,12 @@ async function renderCampaigns(campaignsToRender) {
             startCountdown(campaignId, data.endTime); // เริ่มนับเวลา
         }
 
+        // student.js (แก้ไขในฟังก์ชัน renderCampaigns)
         let optionsHtml = `<div class="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-2">`;
         data.options.forEach((opt) => {
-            const imgTag = opt.image ? `<img src="${opt.image}" class="w-full h-28 object-cover rounded-lg mb-2 border border-gray-100" onerror="this.style.display='none'">` : '';
+            // แก้ไขบรรทัด imgTag ด้านล่างนี้
+            const imgTag = opt.image ? `<img src="${opt.image}" onclick="viewImage(event, '${opt.image}')" class="w-full h-28 object-cover rounded-lg mb-2 border border-gray-100 hover:opacity-80 transition-opacity relative z-10 cursor-zoom-in" title="คลิกเพื่อดูรูปใหญ่" onerror="this.style.display='none'">` : '';
+            
             optionsHtml += `
                 <label class="cursor-pointer relative block ${hasVoted ? 'opacity-50 pointer-events-none' : ''}">
                     <input type="radio" name="vote_${campaignId}" value="${opt.name}" class="peer sr-only" ${hasVoted ? 'disabled' : ''}>
@@ -183,6 +186,28 @@ window.submitVote = async function(campaignId) {
             } catch (error) {
                 Swal.fire('ผิดพลาด', 'เกิดข้อผิดพลาดในการส่งผลโหวต ลองใหม่อีกครั้งนะ', 'error');
             }
+        }
+    });
+}
+
+// student.js (เอาไปต่อท้ายไฟล์สุดเลยครับ)
+
+window.viewImage = function(e, imageUrl) {
+    e.preventDefault(); // ป้องกันไม่ให้การคลิกรูปไปทำให้ Radio Button ทำงาน
+    e.stopPropagation(); // ป้องกันไม่ให้ Event ทะลุไปหา Label
+
+    Swal.fire({
+        imageUrl: imageUrl,
+        imageAlt: 'รูปภาพตัวเลือก',
+        showCloseButton: true,
+        showConfirmButton: false,
+        width: 'auto',
+        padding: '1rem',
+        background: 'transparent',
+        backdrop: `rgba(0,0,0,0.8)`,
+        customClass: {
+            image: 'max-h-[80vh] object-contain rounded-xl shadow-2xl bg-white p-2',
+            closeButton: 'text-white bg-purple-600 hover:bg-purple-700 rounded-full w-8 h-8 flex items-center justify-center m-2 shadow-lg outline-none'
         }
     });
 }
