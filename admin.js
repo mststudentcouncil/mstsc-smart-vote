@@ -51,6 +51,7 @@ function formatImageUrl(url) {
     return url;
 }
 
+// ----------------- ก๊อปปี้ไปทับฟังก์ชันการกดบันทึกฟอร์มเดิม -----------------
 const form = document.getElementById("createCampaignForm");
 form.addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -59,6 +60,7 @@ form.addEventListener("submit", async (e) => {
     const desc = document.getElementById("desc").value;
     const endTime = document.getElementById("endTime").value;
     
+    // จัดการข้อมูลกลุ่มเป้าหมาย
     const targetType = document.getElementById("voterTargetType").value;
     let targetValues = [];
     if (targetType === "custom_level") {
@@ -90,28 +92,49 @@ form.addEventListener("submit", async (e) => {
 
     Swal.fire({ title: 'กำลังบันทึกข้อมูล...', allowOutsideClick: false, didOpen: () => { Swal.showLoading() } });
 
+    // สร้างข้อมูลพื้นฐาน (ไม่ใส่ status เพื่อป้องกันบั๊ก undefined ใน Firebase)
     const payload = {
-        title, description: desc, endTime: endTime || null, options: optionsData, allowed_voters: { type: targetType, values: targetValues }, status: editingId ? undefined : "open"
+        title: title, 
+        description: desc, 
+        endTime: endTime || null, 
+        options: optionsData, 
+        allowed_voters: { type: targetType, values: targetValues }
     };
 
     try {
         if (editingId) {
+            // กรณี "แก้ไข" รายการเดิม
             const campRef = doc(db, "campaigns", editingId);
             const docSnap = await getDoc(campRef);
-            let oldVotes = docSnap.data().votes_count;
-            optionsData.forEach(opt => { if (oldVotes[opt.name] !== undefined) initialVotes[opt.name] = oldVotes[opt.name]; });
+            let oldVotes = docSnap.data().votes_count || {};
+            
+            // ดึงคะแนนเดิมมาใส่ เพื่อไม่ให้คะแนนหายตอนกดแก้ไขชื่อหรือรูปภาพ
+            optionsData.forEach(opt => { 
+                if (oldVotes[opt.name] !== undefined) initialVotes[opt.name] = oldVotes[opt.name]; 
+            });
             payload.votes_count = initialVotes;
+            
             await updateDoc(campRef, payload);
             Swal.fire('สำเร็จ', 'แก้ไขรายการเรียบร้อยแล้ว', 'success');
+            
         } else {
+            // กรณี "สร้าง" รายการใหม่
             payload.votes_count = initialVotes;
+            payload.status = "open"; // กำหนดสถานะให้ตอนสร้างใหม่เท่านั้น
             payload.createdAt = serverTimestamp();
+            
             await addDoc(collection(db, "campaigns"), payload);
             Swal.fire('สำเร็จ', 'สร้างรายการลงคะแนนเรียบร้อยแล้ว', 'success');
         }
-        resetForm(); loadCampaigns();
-    } catch (error) { Swal.fire({ icon: 'error', title: 'ข้อผิดพลาด', text: 'ไม่สามารถบันทึกข้อมูลได้', confirmButtonColor: '#6b21a8' }); }
+        
+        resetForm(); 
+        loadCampaigns();
+    } catch (error) { 
+        console.error("Save Error: ", error);
+        Swal.fire({ icon: 'error', title: 'ข้อผิดพลาด', text: 'ไม่สามารถบันทึกข้อมูลได้ กรุณาลองใหม่อีกครั้ง', confirmButtonColor: '#6b21a8' }); 
+    }
 });
+// ----------------- สิ้นสุดการก๊อปปี้ -----------------
 
 function resetForm() {
     form.reset(); document.getElementById("editingId").value = "";
