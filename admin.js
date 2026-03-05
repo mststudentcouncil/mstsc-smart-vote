@@ -208,6 +208,13 @@ window.loadCampaigns = async function() {
             const toggleBtnText = data.status === "open" ? "ปิดระบบลงคะแนน" : "เปิดระบบอีกครั้ง";
             const toggleBtnClass = data.status === "open" ? "bg-gray-100 hover:bg-gray-200 text-gray-700 border-gray-300" : "bg-green-50 hover:bg-green-100 text-green-700 border-green-200";
 
+            // แปลงรูปแบบเวลาให้สวยงาม
+            let endTimeText = '';
+            if (data.endTime) {
+                const endDate = new Date(data.endTime);
+                endTimeText = `<div class="text-xs font-semibold text-purple-700 bg-purple-50 inline-block px-2 py-1 rounded border border-purple-100 mb-4 flex items-center gap-1 w-fit"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> สิ้นสุด: ${endDate.toLocaleString('th-TH', {dateStyle: 'medium', timeStyle: 'short'})} น.</div>`;
+            }
+
             let optionsHtml = '<div class="grid grid-cols-2 md:grid-cols-3 gap-3 mt-4">';
             data.options.forEach(opt => { 
                 const placeholder = "https://placehold.co/400x400/f3f4f6/a8a29e?text=No+Image";
@@ -221,9 +228,10 @@ window.loadCampaigns = async function() {
             campaignList.innerHTML += `
                 <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
                     <div class="flex justify-between items-start mb-2"><h3 class="font-bold text-lg text-purple-900 flex items-center flex-wrap">${data.title} ${targetBadge}</h3>${statusBadge}</div>
+                    ${endTimeText}
                     <p class="text-gray-500 text-sm mb-4">${data.description || 'ไม่มีคำอธิบาย'}</p>
                     ${optionsHtml}
-                    <div id="results_${id}" class="hidden bg-gray-50 p-5 rounded-lg mt-6 border border-gray-200"></div>
+                    <div id="results_${id}" class="hidden bg-gray-50 p-5 rounded-lg mt-6 border border-gray-200 shadow-inner"></div>
                     <div class="flex flex-wrap gap-2 mt-6 pt-4 border-t border-gray-100">
                         <button onclick="viewResults('${id}')" class="flex items-center gap-1 text-sm bg-purple-700 hover:bg-purple-800 text-white px-4 py-2 rounded-lg font-medium transition-colors"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg> ผลคะแนนและสถิติ</button>
                         <button onclick="editCampaign('${id}')" class="flex items-center gap-1 text-sm bg-yellow-50 hover:bg-yellow-100 text-yellow-700 border border-yellow-200 px-4 py-2 rounded-lg font-medium transition-colors">${editIconSvg} แก้ไข</button>
@@ -274,7 +282,6 @@ window.viewResults = async function(campaignId) {
     resultDiv.classList.remove('hidden');
     resultDiv.innerHTML = '<div class="text-center py-4 text-purple-700 font-medium animate-pulse">กำลังโหลดผลคะแนนและประมวลผลสถิติแยกชั้น...</div>';
 
-    // สร้างฟังก์ชันโหลดข้อมูลข้างใน
     const loadData = async () => {
         try {
             const docSnap = await getDoc(doc(db, "campaigns", campaignId));
@@ -287,7 +294,6 @@ window.viewResults = async function(campaignId) {
             const votes = data.votes_count;
             const title = data.title;
             
-            // ดึงข้อมูลผู้โหวต 1 ครั้ง
             const votersSnap = await getDocs(collection(db, "campaigns", campaignId, "voters"));
             let votedByRoom = {};
             votersSnap.forEach(v => {
@@ -305,7 +311,6 @@ window.viewResults = async function(campaignId) {
                 });
             }
 
-            // จัดกลุ่มห้องแยกตามระดับชั้น
             let statsByLevel = {};
             let sortedRooms = Object.keys(eligibleByRoom).sort((a,b) => a.localeCompare(b, 'th', {numeric:true}));
             sortedRooms.forEach(r => {
@@ -320,12 +325,15 @@ window.viewResults = async function(campaignId) {
                     <div class="flex items-center gap-2">
                         <h4 class="font-bold text-gray-800">สรุปผลคะแนน</h4>
                         <button onclick="document.getElementById('refreshBtn_${campaignId}').click()" class="text-[10px] bg-blue-100 hover:bg-blue-200 text-blue-700 px-2 py-1 rounded-md transition-colors flex items-center gap-1" id="refreshBtn_${campaignId}">
-                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg> อัปเดตข้อมูล
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg> อัปเดต
                         </button>
                     </div>
-                    <div class="flex gap-2">
-                        <button onclick="exportExcel('${campaignId}')" class="text-xs bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded-md shadow-sm">ส่งออก Excel</button>
-                        <button onclick="exportPDF('${campaignId}')" class="text-xs bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded-md shadow-sm">ส่งออก PDF</button>
+                    <div class="flex gap-2 items-center">
+                        <button onclick="exportExcel('${campaignId}')" class="text-xs bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded-md shadow-sm hidden sm:block">Excel</button>
+                        <button onclick="exportPDF('${campaignId}')" class="text-xs bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded-md shadow-sm hidden sm:block">PDF</button>
+                        <button onclick="document.getElementById('results_${campaignId}').classList.add('hidden')" class="ml-2 bg-gray-200 hover:bg-gray-300 text-gray-600 p-1.5 rounded-md transition-colors" title="ปิดหน้าต่างสถิติ">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                        </button>
                     </div>
                 </div>
                 
@@ -392,10 +400,15 @@ window.viewResults = async function(campaignId) {
                 });
             }
 
-            resultHtml += `</div>`; 
+            resultHtml += `</div>
+                <div class="mt-4 pt-4 border-t border-gray-200 text-center">
+                    <button onclick="document.getElementById('results_${campaignId}').classList.add('hidden')" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-6 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 mx-auto">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path></svg> ย่อหน้าต่างสถิติ
+                    </button>
+                </div>
+            `; 
             resultDiv.innerHTML = resultHtml;
 
-            // ผูก Event ให้ปุ่ม Refresh
             document.getElementById(`refreshBtn_${campaignId}`).addEventListener('click', () => {
                 resultDiv.innerHTML = '<div class="text-center py-4 text-purple-700 font-medium animate-pulse">กำลังอัปเดตข้อมูล...</div>';
                 loadData();
@@ -407,7 +420,7 @@ window.viewResults = async function(campaignId) {
         }
     };
 
-    loadData(); // เรียกใช้งานครั้งแรก
+    loadData(); 
 }
 
 // ================= ระบบส่งออก EXCEL (แยกชีทตามระดับชั้น) =================
