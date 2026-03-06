@@ -145,7 +145,7 @@ async function renderCampaigns(campaignsToRender) {
             <div class="absolute top-0 left-0 w-1.5 h-full ${isExpired ? 'bg-gray-400' : 'bg-purple-700'} rounded-l-2xl"></div>
             <div class="pl-3">
                 <h3 class="text-xl md:text-2xl font-bold ${isExpired ? 'text-gray-500' : 'text-gray-900'} mb-2">${data.title}</h3>
-                <p class="text-gray-500 mb-5 text-sm md:text-base">${data.description || 'กรุณาเลือกรายการที่ท่านต้องการเพียง 1 หมายเลข'}</p>
+                <p class="text-gray-500 mb-5 text-sm md:text-base">${data.description || 'กรุณาเลือกผู้สมัครที่ท่านต้องการเพียง 1 หมายเลข'}</p>
                 ${timeBadge}${optionsHtml}<div class="text-center">${buttonHtml}</div>
             </div>
         `;

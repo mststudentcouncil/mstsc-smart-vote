@@ -9,6 +9,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script>tailwind.config = { theme: { extend: { fontFamily: { sans: ['Anuphan', 'sans-serif'] } } } }</script>
     <style> body { font-family: 'Anuphan', sans-serif; } </style>
+    <link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#581c87">
 </head>
 <body class="bg-gradient-to-br from-purple-900 via-purple-800 to-purple-900 min-h-screen flex items-center justify-center p-4">
 
@@ -26,5 +28,85 @@
     </div>
 
     <script type="module" src="auth.js"></script>
+    <script>
+    document.addEventListener("DOMContentLoaded", () => {
+        // เช็คว่าเคยกดปิดไปแล้ว หรือ เปิดใช้งานผ่านแอปอยู่แล้วหรือไม่
+        const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+        const isDismissed = localStorage.getItem('pwaDismissed');
+
+        if (isStandalone || isDismissed) return; // ถ้าเงื่อนไขตรง ไม่ต้องแสดงแบนเนอร์
+
+        // สร้าง Banner แจ้งเตือนไว้ด้านล่างจอ
+        const banner = document.createElement('div');
+        banner.className = "fixed bottom-4 left-4 right-4 bg-white rounded-xl shadow-2xl border border-purple-100 p-4 flex items-center justify-between z-50 transition-all duration-500 transform translate-y-24 opacity-0 max-w-md mx-auto";
+        banner.innerHTML = `
+            <div class="flex items-center gap-3">
+                <div class="bg-purple-100 p-2.5 rounded-lg text-purple-700">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                </div>
+                <div>
+                    <h4 class="text-sm font-bold text-gray-800 mb-0.5">ติดตั้งแอป MST e-Voting</h4>
+                    <p class="text-[11px] text-gray-500 leading-tight">เพิ่มลงหน้าจอหลัก โหวตง่าย ไม่ต้องเข้าเว็บใหม่</p>
+                </div>
+            </div>
+            <div class="flex gap-2 items-center">
+                <button id="pwaInstallBtn" class="bg-purple-700 hover:bg-purple-800 text-white text-xs font-bold py-2 px-3.5 rounded-lg shadow-sm transition-colors">ติดตั้ง</button>
+                <button id="pwaCloseBtn" class="text-gray-400 hover:text-gray-600 p-1"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+            </div>
+        `;
+        document.body.appendChild(banner);
+
+        // แสดง Banner แบบนุ่มนวลหลังจากโหลดเว็บเสร็จ 1.5 วินาที
+        setTimeout(() => {
+            banner.classList.remove('translate-y-24', 'opacity-0');
+        }, 1500);
+
+        // จัดการเมื่อเด็กกดปุ่ม กากบาท (ปิด)
+        document.getElementById('pwaCloseBtn').addEventListener('click', () => {
+            banner.classList.add('translate-y-24', 'opacity-0');
+            setTimeout(() => banner.remove(), 500);
+            localStorage.setItem('pwaDismissed', 'true'); // จำไว้ในเครื่องว่าเคยกดปิด จะได้ไม่กวนอีก
+        });
+
+        // จัดการเรื่องการติดตั้ง
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+        let deferredPrompt;
+
+        // ดักจับ Event ของ Android Chrome
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+        });
+
+        // เมื่อกดปุ่ม "ติดตั้ง"
+        document.getElementById('pwaInstallBtn').addEventListener('click', async () => {
+            if (isIOS) {
+                // สำหรับ iPhone / iPad (Safari ไม่อนุญาตให้ติดตั้งอัตโนมัติ ต้องสอนวิธีกด)
+                Swal.fire({
+                    title: 'วิธีติดตั้งบน iPhone (iOS)',
+                    html: `
+                        <div class="text-left text-sm text-gray-600 mt-2 bg-gray-50 p-4 rounded-lg border border-gray-100">
+                            <b>1.</b> กดปุ่มแชร์ <svg class="w-5 h-5 inline text-blue-500" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg> ตรงแถบเครื่องมือด้านล่างของ Safari<br><br>
+                            <b>2.</b> เลื่อนลงมาแล้วกดเลือกเมนู <br><b class="text-purple-700">"เพิ่มไปยังหน้าจอโฮม"</b> <br><span class="text-xs text-gray-400">(Add to Home Screen)</span>
+                        </div>
+                    `,
+                    icon: 'info',
+                    confirmButtonColor: '#6b21a8'
+                });
+            } else if (deferredPrompt) {
+                // สำหรับ Android (เด้งหน้าต่างถามติดตั้งเลย)
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                if (outcome === 'accepted') {
+                    banner.remove(); // ถ้าติดตั้งเสร็จให้ซ่อนแบนเนอร์
+                }
+                deferredPrompt = null;
+            } else {
+                // กรณีเข้าผ่านเบราว์เซอร์ที่ไม่รองรับ (เช่น เปิดจากเบราว์เซอร์ในไลน์)
+                Swal.fire('คำแนะนำ', 'กรุณากดที่เมนูจุด 3 จุดมุมขวาบน แล้วเลือก "เปิดในเบราว์เซอร์ (Open in Browser)" ก่อนติดตั้งครับ', 'warning');
+            }
+        });
+    });
+    </script>
 </body>
 </html>

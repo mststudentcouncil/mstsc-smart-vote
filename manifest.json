@@ -1,0 +1,21 @@
+{
+  "name": "MST e-Voting",
+  "short_name": "e-Voting",
+  "description": "ระบบลงคะแนนอิเล็กทรอนิกส์ โรงเรียนเมืองสุราษฎร์ธานี",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#581c87",
+  "icons": [
+    {
+      "src": "https://i.postimg.cc/yxjxZmRN/Logo_mstsc_(1)_(1).png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://i.postimg.cc/yxjxZmRN/Logo_mstsc_(1)_(1).png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
